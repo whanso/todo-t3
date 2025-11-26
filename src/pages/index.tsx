@@ -1,13 +1,15 @@
 import Head from "next/head";
 import { type FormEvent, useMemo, useState } from "react";
+
+import { IconCircleCheck, IconCircleDashed } from "@tabler/icons-react";
+
 import {
-  Box,
+  ActionIcon,
   Button,
-  Flex,
   Group,
   List,
+  Text,
   TextInput,
-  ThemeIcon,
 } from "@mantine/core";
 
 import { api } from "~/utils/api";
@@ -74,7 +76,8 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
-        <div>
+        {/* TODO: make the content centered using flex or some other way */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
           <header>
             <h1>{`What's on your mind today?`}</h1>
             <p>{hint}</p>
@@ -113,42 +116,30 @@ export default function Home() {
                     <List.Item
                       key={todo.id}
                       icon={
-                        <ThemeIcon color="teal" size={24} radius="xl">
-                          {/* <IconCircleCheck size="1rem" /> */}
-                        </ThemeIcon>
-                      }
-                    >
-                      <Group>
-                        <Button
+                        <ActionIcon
                           type="button"
+                          color={todo.completed ? "teal" : "grey"}
+                          size={24}
+                          radius="xl"
+                          disabled={toggleTodo.isPending}
+                          aria-pressed={todo.completed}
                           onClick={() =>
                             toggleTodo.mutate({
                               id: todo.id,
                               completed: !todo.completed,
                             })
                           }
-                          disabled={toggleTodo.isPending}
-                          aria-pressed={todo.completed}
                         >
-                          <span
-                            className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs ${
-                              todo.completed
-                                ? "border-indigo-400 bg-indigo-500 text-white"
-                                : "border-slate-700 text-transparent"
-                            }`}
-                          >
-                            ✓
-                          </span>
-                          <span
-                            className={`text-base ${
-                              todo.completed
-                                ? "text-slate-500 line-through"
-                                : "text-white"
-                            }`}
-                          >
-                            {todo.title}
-                          </span>
-                        </Button>
+                          {todo.completed ? (
+                            <IconCircleCheck size="1rem" />
+                          ) : (
+                            <IconCircleDashed size="1rem" />
+                          )}
+                        </ActionIcon>
+                      }
+                    >
+                      <Group>
+                        <Text>{todo.title}</Text>
                         <Button
                           type="button"
                           onClick={() => removeTodo.mutate({ id: todo.id })}
