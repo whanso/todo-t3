@@ -3,16 +3,24 @@ import { Geist } from "next/font/google";
 
 import { api } from "~/utils/api";
 
-import "~/styles/globals.css";
+import "@mantine/core/styles.css";
+
+import { createTheme, MantineProvider } from "@mantine/core";
 
 const geist = Geist({
   subsets: ["latin"],
 });
 
+const theme = createTheme({
+  /** Put your mantine theme override here */
+});
+
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <div className={geist.className}>
-      <Component {...pageProps} />
+      <MantineProvider theme={theme}>
+        <Component {...pageProps} />
+      </MantineProvider>
     </div>
   );
 };
