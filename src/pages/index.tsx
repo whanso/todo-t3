@@ -58,8 +58,14 @@ export default function Home() {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main style={{ maxWidth: "800px", margin: "0 auto" }}>
-        {/* TODO: make the content centered using flex or some other way */}
+      <main
+        style={{
+          maxWidth: "800px",
+          margin: "0 auto",
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
         <div style={{ display: "flex", flexDirection: "column" }}>
           <header>
             <h1>{`What's on your mind today?`}</h1>
@@ -97,6 +103,7 @@ export default function Home() {
                 <List>
                   {todos.map((todo) => (
                     <List.Item
+                      style={{ marginTop: "0.25rem" }}
                       key={todo.id}
                       icon={
                         <ActionIcon
@@ -125,7 +132,7 @@ export default function Home() {
                         <Text
                           style={{
                             textOverflow: "ellipsis",
-                            width: "100px",
+                            width: "120px",
                             overflow: "hidden",
                             whiteSpace: "nowrap",
                           }}
