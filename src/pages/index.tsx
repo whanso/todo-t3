@@ -12,41 +12,24 @@ import {
   TextInput,
 } from "@mantine/core";
 
-import { api } from "~/utils/api";
+import { useTodos } from "~/hooks/useTodos";
 
 export default function Home() {
-  const utils = api.useUtils();
   const [title, setTitle] = useState("");
 
+  const handleOnCreateTodo = () => {
+    setTitle("");
+  };
+
   const {
-    data: todos,
+    todos,
+    createTodo,
+    removeTodo,
+    toggleTodo,
     isLoading,
     isFetching,
-  } = api.todo.list.useQuery(undefined, {
-    refetchOnWindowFocus: false,
-  });
-
-  const createTodo = api.todo.create.useMutation({
-    onSuccess: async () => {
-      setTitle("");
-      await utils.todo.list.invalidate();
-    },
-  });
-
-  const toggleTodo = api.todo.toggle.useMutation({
-    onSuccess: async () => {
-      await utils.todo.list.invalidate();
-    },
-  });
-
-  const removeTodo = api.todo.remove.useMutation({
-    onSuccess: async () => {
-      await utils.todo.list.invalidate();
-    },
-  });
-
-  const pending =
-    createTodo.isPending || toggleTodo.isPending || removeTodo.isPending;
+    pending,
+  } = useTodos(handleOnCreateTodo);
 
   const hint = useMemo(() => {
     if (pending) return "Saving changes…";
@@ -75,7 +58,7 @@ export default function Home() {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main>
+      <main style={{ maxWidth: "800px", margin: "0 auto" }}>
         {/* TODO: make the content centered using flex or some other way */}
         <div style={{ display: "flex", flexDirection: "column" }}>
           <header>
@@ -139,7 +122,16 @@ export default function Home() {
                       }
                     >
                       <Group>
-                        <Text>{todo.title}</Text>
+                        <Text
+                          style={{
+                            textOverflow: "ellipsis",
+                            width: "100px",
+                            overflow: "hidden",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {todo.title}
+                        </Text>
                         <Button
                           type="button"
                           onClick={() => removeTodo.mutate({ id: todo.id })}
