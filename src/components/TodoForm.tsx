@@ -1,20 +1,27 @@
 import { Button, Group, TextInput } from "@mantine/core";
 import { useState, type FormEvent } from "react";
+import { api } from "~/utils/api";
 
 interface Props {
   onSubmit: (title: string) => void;
   createPending: boolean;
 }
 
-export default function TodoForm({ onSubmit, createPending }: Props) {
+export default function TodoForm() {
+  const createTodo = api.todo.create.useMutation();
+
   const [title, setTitle] = useState("");
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmed = title.trim();
     if (!trimmed) return;
-    onSubmit(trimmed);
+    setTitle("");
+    createTodo.mutate({ title: trimmed });
   };
+
+  const createPending = createTodo.isPending;
+
   return (
     <form onSubmit={handleSubmit}>
       <Group align="flex-end">

@@ -42,23 +42,11 @@ export function useTodos() {
     },
   });
 
-  const createTodo = api.todo.create.useMutation({
-    onSuccess: async () => {
-      await utils.todo.list.invalidate();
-    },
-  });
+  const createTodo = api.todo.create.useMutation();
 
-  const toggleTodo = api.todo.toggle.useMutation({
-    onSuccess: async () => {
-      await utils.todo.list.invalidate();
-    },
-  });
+  const toggleTodo = api.todo.toggle.useMutation();
 
-  const removeTodo = api.todo.remove.useMutation({
-    onSuccess: async () => {
-      await utils.todo.list.invalidate();
-    },
-  });
+  const removeTodo = api.todo.remove.useMutation();
 
   const pending =
     createTodo.isPending || toggleTodo.isPending || removeTodo.isPending;
