@@ -47,6 +47,10 @@ export default function Home() {
           content="Manage your tasks with a tiny todo list."
         />
         <link rel="icon" href="/favicon.ico" />
+        {/* <script
+          crossOrigin="anonymous"
+          src="//unpkg.com/react-scan/dist/auto.global.js"
+        /> */}
       </Head>
       <main
         style={{
