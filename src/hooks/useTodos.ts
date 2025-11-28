@@ -10,21 +10,35 @@ export function useTodos(onCreateTodo: () => void) {
     refetchOnWindowFocus: false,
   });
 
-  api.todo.onTodoAdd.useSubscription(undefined, {
-    onData: (todo) => {
-      utils.todo.list.setData(undefined, (old) => {
-        if (!old) return [todo.data];
-        return [todo.data, ...old];
-      });
-    },
-  });
-
-  api.todo.onTodoRemove.useSubscription(undefined, {
-    onData: (todoId) => {
-      utils.todo.list.setData(undefined, (old) => {
-        if (!old) return [];
-        return old.filter((todo) => todo.id !== todoId.data);
-      });
+  api.todo.onTodoAction.useSubscription(undefined, {
+    onData: ({ data: payload }) => {
+      switch (payload.type) {
+        case "add": {
+          utils.todo.list.setData(undefined, (old) => {
+            if (!old) return [payload.data];
+            return [payload.data, ...old];
+          });
+          break;
+        }
+        case "remove": {
+          utils.todo.list.setData(undefined, (old) => {
+            if (!old) return [];
+            return old.filter((todo) => todo.id !== payload.data);
+          });
+          break;
+        }
+        case "toggle": {
+          utils.todo.list.setData(undefined, (old) => {
+            if (!old) return [];
+            return old.map((todo) =>
+              todo.id === payload.data.id
+                ? { ...todo, completed: payload.data.completed }
+                : todo,
+            );
+          });
+          break;
+        }
+      }
     },
   });
 

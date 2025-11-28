@@ -5,6 +5,7 @@ import { EventEmitter } from "stream";
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { multiOn } from "~/server/helpers";
 
 type EventMap<T> = Record<keyof T, any[]>;
 class IterableEventEmitter<T extends EventMap<T>> extends EventEmitter<T> {
@@ -19,6 +20,7 @@ class IterableEventEmitter<T extends EventMap<T>> extends EventEmitter<T> {
 export interface MyEvents {
   add: [data: Todo];
   remove: [id: number];
+  toggle: [{ id: number; completed: boolean }];
 }
 
 export const ee = new IterableEventEmitter<MyEvents>();
@@ -54,10 +56,12 @@ export const todoRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.todo.update({
+      const todo = await ctx.db.todo.update({
         where: { id: input.id },
         data: { completed: input.completed },
       });
+      ee.emit("toggle", { id: input.id, completed: input.completed });
+      return todo;
     }),
 
   remove: publicProcedure
@@ -73,24 +77,40 @@ export const todoRouter = createTRPCRouter({
       ee.emit("remove", input.id);
       return { id: input.id };
     }),
-  onTodoAdd: publicProcedure.subscription(async function* (opts) {
-    // listen for new events
-    for await (const [data] of on(ee, "add", {
-      // Passing the AbortSignal from the request automatically cancels the event emitter when the request is aborted
-      signal: opts.signal,
-    })) {
-      const post = data as Todo;
-      yield tracked(post.id.toString(), post);
-    }
-  }),
-  onTodoRemove: publicProcedure.subscription(async function* (opts) {
-    // listen for new events
-    for await (const [data] of on(ee, "remove", {
-      // Passing the AbortSignal from the request automatically cancels the event emitter when the request is aborted
-      signal: opts.signal,
-    })) {
-      const todoId = data as number;
-      yield tracked(data.toString(), todoId);
+  onTodoAction: publicProcedure.subscription(async function* (opts) {
+    const events = ["add", "remove", "toggle"];
+
+    const iterator = multiOn(ee, events, opts.signal);
+
+    for await (const [event, data] of iterator) {
+      switch (event) {
+        case "add": {
+          const post = data as Todo;
+          yield tracked(event + post.id.toString(), {
+            type: event,
+            data: post,
+          });
+          break;
+        }
+
+        case "remove": {
+          const todoId = data as number;
+          yield tracked(event + todoId.toString(), {
+            type: event,
+            data: todoId,
+          });
+          break;
+        }
+
+        case "toggle": {
+          const todo = data as { id: number; completed: boolean };
+          yield tracked(event + todo.id.toString(), {
+            type: event,
+            data: todo,
+          });
+          break;
+        }
+      }
     }
   }),
 });
