@@ -1,26 +1,11 @@
 import Head from "next/head";
-import { type FormEvent, useMemo, useState } from "react";
-
-import { IconCircleCheck, IconCircleDashed } from "@tabler/icons-react";
-
-import {
-  ActionIcon,
-  Button,
-  Group,
-  List,
-  Text,
-  TextInput,
-} from "@mantine/core";
+import { useMemo } from "react";
 
 import { useTodos } from "~/hooks/useTodos";
+import TodoForm from "~/components/TodoForm";
+import TodoList from "~/components/TodoList";
 
 export default function Home() {
-  const [title, setTitle] = useState("");
-
-  const handleOnCreateTodo = () => {
-    setTitle("");
-  };
-
   const {
     todos,
     createTodo,
@@ -29,7 +14,7 @@ export default function Home() {
     isLoading,
     isFetching,
     pending,
-  } = useTodos(handleOnCreateTodo);
+  } = useTodos();
 
   const hint = useMemo(() => {
     if (pending) return "Saving changes…";
@@ -41,11 +26,16 @@ export default function Home() {
       : "All tasks done 🎉";
   }, [isFetching, todos, pending]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmed = title.trim();
-    if (!trimmed) return;
-    createTodo.mutate({ title: trimmed });
+  const handleSubmit = (title: string) => {
+    createTodo.mutate({ title });
+  };
+
+  const handleRemoveTodo = (id: number) => {
+    removeTodo.mutate({ id });
+  };
+
+  const handleToggleTodo = (id: number, completed: boolean) => {
+    toggleTodo.mutate({ id, completed });
   };
 
   return (
@@ -73,24 +63,10 @@ export default function Home() {
           </header>
 
           <section>
-            <form onSubmit={handleSubmit}>
-              <Group align="flex-end">
-                <TextInput
-                  label="Add todo"
-                  id="todo-input"
-                  placeholder="Add a new task and hit Enter"
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  disabled={createTodo.isPending}
-                />
-                <Button
-                  type="submit"
-                  disabled={createTodo.isPending || !title.trim()}
-                >
-                  {createTodo.isPending ? "Adding…" : "Add task"}
-                </Button>
-              </Group>
-            </form>
+            <TodoForm
+              createPending={createTodo.isPending}
+              onSubmit={handleSubmit}
+            />
 
             <div>
               {isLoading ? (
@@ -100,56 +76,13 @@ export default function Home() {
                   No todos yet. Start by adding something you need to get done.
                 </p>
               ) : (
-                <List>
-                  {todos.map((todo) => (
-                    <List.Item
-                      style={{ marginTop: "0.25rem" }}
-                      key={todo.id}
-                      icon={
-                        <ActionIcon
-                          type="button"
-                          color={todo.completed ? "teal" : "grey"}
-                          size={24}
-                          radius="xl"
-                          disabled={toggleTodo.isPending}
-                          aria-pressed={todo.completed}
-                          onClick={() =>
-                            toggleTodo.mutate({
-                              id: todo.id,
-                              completed: !todo.completed,
-                            })
-                          }
-                        >
-                          {todo.completed ? (
-                            <IconCircleCheck size="1rem" />
-                          ) : (
-                            <IconCircleDashed size="1rem" />
-                          )}
-                        </ActionIcon>
-                      }
-                    >
-                      <Group>
-                        <Text
-                          style={{
-                            textOverflow: "ellipsis",
-                            width: "120px",
-                            overflow: "hidden",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {todo.title}
-                        </Text>
-                        <Button
-                          type="button"
-                          onClick={() => removeTodo.mutate({ id: todo.id })}
-                          disabled={removeTodo.isPending}
-                        >
-                          Remove
-                        </Button>
-                      </Group>
-                    </List.Item>
-                  ))}
-                </List>
+                <TodoList
+                  todos={todos}
+                  onToggleTodo={handleToggleTodo}
+                  onRemoveTodo={handleRemoveTodo}
+                  removePending={removeTodo.isPending}
+                  togglePending={toggleTodo.isPending}
+                />
               )}
             </div>
           </section>

@@ -1,6 +1,6 @@
 import { api } from "~/utils/api";
 
-export function useTodos(onCreateTodo: () => void) {
+export function useTodos() {
   const utils = api.useUtils();
   const {
     data: todos,
@@ -44,7 +44,6 @@ export function useTodos(onCreateTodo: () => void) {
 
   const createTodo = api.todo.create.useMutation({
     onSuccess: async () => {
-      onCreateTodo();
       await utils.todo.list.invalidate();
     },
   });
